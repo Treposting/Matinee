@@ -16,6 +16,9 @@ struct TimerPopover: View {
             Divider()
             DurationSettings()
             Divider()
+            CaffeineToggle()
+            ReminderSettingsView()
+            Divider()
             footer
         }
         .padding(16)

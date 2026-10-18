@@ -16,6 +16,9 @@ final class FocusTimer {
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var tickTask: Task<Void, Never>?
 
+    /// Called with the phase that just reached zero.
+    @ObservationIgnored var onPhaseFinished: (@MainActor (TimerPhase) -> Void)?
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         let focus = defaults.object(forKey: Keys.focusMinutes) as? Int ?? TimerDurations.standard.focusMinutes
@@ -93,9 +96,10 @@ final class FocusTimer {
 
     private func tick() {
         now = .now
-        if session.advanceIfFinished(at: now) != nil {
+        if let finished = session.advanceIfFinished(at: now) {
             stopTicking()
             NSSound(named: "Glass")?.play()
+            onPhaseFinished?(finished)
         }
     }
 }
