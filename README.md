@@ -34,18 +34,6 @@ Requires macOS 27 or later.
    it isn't notarized yet. Go to **System Settings → Privacy & Security** and click
    **Open Anyway**. You only need to do this once; updates open normally.
 
-## Build from source
-
-You need Xcode 27 and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
-
-```sh
-brew install xcodegen
-xcodegen generate
-open Matinee.xcodeproj
-```
-
-The Xcode project is generated from `project.yml` and isn't committed.
-
 ## Releasing
 
 Change `MARKETING_VERSION` in `project.yml` and merge to `main`. GitHub Actions builds,
