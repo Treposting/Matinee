@@ -79,6 +79,18 @@ When there's a Developer ID: add signing and notarization to the Release workflo
 2. Publish `v0.1.1`.
 3. Force a background check: quit Matinee, run
    `defaults delete com.nahid.matinee SULastCheckTime`, and open it again.
-4. Expect a red dot on the menu bar icon, the update banner in the window and a
-   notification (allow notifications when asked). Clicking **Update** should quit,
-   replace and reopen Matinee as 0.1.1.
+   To see what Sparkle is doing, keep this running in Terminal:
+   `log stream --predicate 'subsystem == "org.sparkle-project.Sparkle"' --level debug`
+4. Expect, without any Sparkle window popping up:
+   - a red dot on the menu bar icon (and next to the countdown while a timer runs),
+   - the "Matinee 0.1.1 is available" banner in the menu bar window,
+   - a notification (allow notifications when asked).
+5. Click the notification or **Update**. Sparkle's window shows 0.1.1; the red dot and the
+   notification go away.
+6. Click **Install and Relaunch**. Matinee quits, then 0.1.1 opens from /Applications.
+   Check with `defaults read /Applications/Matinee.app/Contents/Info.plist CFBundleShortVersionString`
+   and confirm only one Matinee is running: `pgrep -lx Matinee`.
+7. Open the menu bar window and click **Check for Updates…**. It should say 0.1.1 is the
+   latest version.
+
+Delete the two test releases and their tags afterwards if you don't want them public.

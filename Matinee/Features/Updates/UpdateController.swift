@@ -22,8 +22,9 @@ final class UpdateController {
         guard isEnabled else { return }
 
         reminders.onUpdateFound = { [weak self] version in self?.updateFound(version: version) }
-        reminders.onUserAttention = { [weak self] in self?.availableVersion = nil }
+        reminders.onUserAttention = { [weak self] in self?.updateSeen() }
         notifier.onOpen = { [weak self] in self?.installUpdate() }
+        notifier.removeNotification()
 
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true,
@@ -46,5 +47,10 @@ final class UpdateController {
     private func updateFound(version: String) {
         availableVersion = version
         Task { await notifier.notifyUpdateAvailable(version: version) }
+    }
+
+    private func updateSeen() {
+        availableVersion = nil
+        notifier.removeNotification()
     }
 }

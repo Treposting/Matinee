@@ -28,6 +28,14 @@ final class UpdateNotifier: NSObject, UNUserNotificationCenterDelegate {
         try? await center.add(request)
     }
 
+    /// Removes the notification once the update has been seen, so a stale one can't trigger
+    /// a check from a later version.
+    func removeNotification() {
+        let center = UNUserNotificationCenter.current()
+        center.removeDeliveredNotifications(withIdentifiers: [Self.identifier])
+        center.removePendingNotificationRequests(withIdentifiers: [Self.identifier])
+    }
+
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
