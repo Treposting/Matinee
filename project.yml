@@ -39,6 +39,7 @@ targets:
       base:
         PRODUCT_NAME: Matinee
         PRODUCT_BUNDLE_IDENTIFIER: com.nahid.matinee
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_FILE: Matinee/Info.plist
         # Sparkle: the updater stays off until SPARKLE_PUBLIC_KEY is set (see docs/RELEASING.md).
