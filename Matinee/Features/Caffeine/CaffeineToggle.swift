@@ -23,12 +23,6 @@ struct CaffeineToggle: View {
     }
 
     private var caption: String {
-        if caffeine.isKeepingAwake {
-            "Keeping your Mac awake"
-        } else if caffeine.isEnabled {
-            "Keeps your Mac awake while the timer runs"
-        } else {
-            "Off"
-        }
+        caffeine.isKeepingAwake ? "Keeping your Mac awake now" : "Keeps your Mac awake while the timer runs"
     }
 }

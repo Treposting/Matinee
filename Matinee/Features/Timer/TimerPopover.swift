@@ -1,54 +1,62 @@
 import AppKit
 import SwiftUI
 
-/// Content of the menu bar window. The window itself is system glass; the controls use
-/// the glass button styles so nothing here fakes translucency.
+/// Content of the menu bar window. The timer leads; settings sit below in collapsible groups
+/// whose headers show their current values. The window itself is system glass, so the
+/// groups use a light semantic fill rather than more glass.
 struct TimerPopover: View {
     @Environment(FocusTimer.self) private var timer
     @Environment(UpdateController.self) private var updates
+    @Environment(ReminderSettings.self) private var reminders
+    @Environment(HealthBreaks.self) private var healthBreaks
+
+    @AppStorage("popover.sessionExpanded") private var sessionExpanded = false
+    @AppStorage("popover.remindersExpanded") private var remindersExpanded = false
+    @AppStorage("popover.healthExpanded") private var healthExpanded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 14) {
             UpdateBanner()
-            header
-            countdown
+            TimerDial()
             TimerControls()
-            Divider()
-            DurationSettings()
-            Divider()
-            CaffeineToggle()
-            ReminderSettingsView()
-            Divider()
-            HealthBreakSettings()
-            Divider()
+
+            VStack(spacing: 8) {
+                PopoverSection(
+                    title: "Session",
+                    systemImage: "timer",
+                    summary: "\(timer.focusMinutes) / \(timer.restMinutes) min",
+                    isExpanded: $sessionExpanded
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        DurationSettings()
+                        Divider()
+                        CaffeineToggle()
+                    }
+                }
+
+                PopoverSection(
+                    title: "When time's up",
+                    systemImage: "bell",
+                    summary: reminders.summary,
+                    isExpanded: $remindersExpanded
+                ) {
+                    ReminderSettingsView()
+                }
+
+                PopoverSection(
+                    title: "Screen-time breaks",
+                    systemImage: "eye",
+                    summary: healthBreaks.summary,
+                    isExpanded: $healthExpanded
+                ) {
+                    HealthBreakSettings()
+                }
+            }
+
             footer
         }
-        .padding(16)
-        .frame(width: 280)
-    }
-
-    private var header: some View {
-        HStack {
-            Label(timer.phase.title, systemImage: timer.phase.systemImage)
-                .font(.headline)
-            Spacer()
-            Text(status)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private var countdown: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(timer.countdown)
-                .font(.system(size: 52, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-                .contentTransition(.numericText(countsDown: true))
-                .animation(.default, value: timer.countdown)
-                .frame(maxWidth: .infinity, alignment: .center)
-            ProgressView(value: timer.progress)
-                .tint(timer.phase == .focus ? Color.accentColor : Color.green)
-        }
+        .padding(14)
+        .frame(width: 300)
     }
 
     private var footer: some View {
@@ -59,14 +67,15 @@ struct TimerPopover: View {
                 }
             }
             Spacer()
-            Button("Quit Matinee") {
+            Button("Quit") {
                 NSApplication.shared.terminate(nil)
             }
             .keyboardShortcut("q")
+            .help("Quit Matinee")
         }
-    }
-
-    private var status: String {
-        if timer.isRunning { "Running" } else if timer.isIdle { "Ready" } else { "Paused" }
+        .buttonStyle(.borderless)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 4)
     }
 }
