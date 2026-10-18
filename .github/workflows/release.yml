@@ -6,7 +6,8 @@ name: Release
 on:
   push:
     branches: [main]
-    paths: [project.yml]
+    # The workflow file is listed so a fix to it retries a version that failed to publish.
+    paths: [project.yml, .github/workflows/release.yml]
     tags: ["v*.*.*"]
 
 permissions:
@@ -120,12 +121,13 @@ jobs:
           mkdir dmg
           ditto build/Build/Products/Release/Matinee.app dmg/Matinee.app
           ln -s /Applications dmg/Applications
-          # hdiutil sometimes fails with "Resource busy" on CI runners, so retry.
-          for attempt in 1 2 3; do
+          # On CI runners hdiutil intermittently fails ("Resource busy", "No such file or
+          # directory"), so retry with a growing pause.
+          for attempt in $(seq 1 8); do
             hdiutil create -volname Matinee -srcfolder dmg -fs HFS+ -format UDZO -ov \
               "Matinee-$VERSION.dmg" && break
-            [ "$attempt" = 3 ] && exit 1
-            sleep 5
+            [ "$attempt" = 8 ] && exit 1
+            sleep $((attempt * 5))
           done
 
       - name: Download Sparkle tools
