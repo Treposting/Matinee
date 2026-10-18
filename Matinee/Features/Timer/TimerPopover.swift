@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Content of the menu bar window. The window itself is system glass; the controls use
@@ -39,7 +40,7 @@ struct TimerPopover: View {
                 .animation(.default, value: timer.countdown)
                 .frame(maxWidth: .infinity, alignment: .center)
             ProgressView(value: timer.progress)
-                .tint(timer.phase == .focus ? .accentColor : .green)
+                .tint(timer.phase == .focus ? Color.accentColor : Color.green)
         }
     }
 

@@ -52,7 +52,8 @@ struct TimerSessionTests {
     @Test func finishingFocusMovesToIdleBreak() {
         var session = TimerSession()
         session.start(at: start)
-        #expect(session.advanceIfFinished(at: start.addingTimeInterval(1499)) == nil)
+        let early = session.advanceIfFinished(at: start.addingTimeInterval(1499))
+        #expect(early == nil)
 
         let finished = session.advanceIfFinished(at: start.addingTimeInterval(1500))
         #expect(finished == .focus)
@@ -65,7 +66,8 @@ struct TimerSessionTests {
         var session = TimerSession()
         session.skip()
         session.start(at: start)
-        #expect(session.advanceIfFinished(at: start.addingTimeInterval(400)) == .rest)
+        let finished = session.advanceIfFinished(at: start.addingTimeInterval(400))
+        #expect(finished == .rest)
         #expect(session.phase == .focus)
     }
 
