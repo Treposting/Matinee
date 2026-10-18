@@ -47,12 +47,11 @@ The updater stays switched off until this is done, so local builds never show Sp
 
 ## Publishing a release
 
-```sh
-git tag v0.1.0
-git push origin v0.1.0
-```
+Change `MARKETING_VERSION` in `project.yml` (for example to `"0.2.0"`) and merge that to
+`main`. When the version has no release yet, the **Release** workflow tags the commit
+`v0.2.0` and publishes it. Pushing a tag like `v0.2.0` by hand also works.
 
-The **Release** workflow builds the app with that version, zips it, signs the zip with
+The workflow builds the app with that version, zips it, signs the zip with
 the private key, writes `appcast.xml`, and publishes them on a GitHub release together
 with a `.dmg` for installing by hand. The build
 number is the workflow run number, so it always grows; Sparkle uses it to decide what's
@@ -77,8 +76,8 @@ When there's a Developer ID: add signing and notarization to the Release workflo
 
 ## Testing the update flow
 
-1. Publish `v0.1.0`, install it as above and launch it once.
-2. Publish `v0.1.1`.
+1. Publish one version, install it as above and launch it once.
+2. Publish the next version.
 3. Force a background check: quit Matinee, run
    `defaults delete com.nahid.matinee SULastCheckTime`, and open it again.
    To see what Sparkle is doing, keep this running in Terminal:
