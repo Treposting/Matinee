@@ -1,0 +1,122 @@
+name: Release
+
+# Push a tag like v0.2.0 to publish a release. The appcast.xml attached to the latest
+# release is the feed every installed copy of Matinee checks for updates.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    env:
+      SPARKLE_VERSION: 2.10.0
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode 27
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_27*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then
+            sudo xcode-select -s "$XCODE/Contents/Developer"
+          fi
+          xcodebuild -version
+
+      - name: Read version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          # Sparkle compares CFBundleVersion, so it must grow with every release.
+          echo "BUILD=${{ github.run_number }}" >> "$GITHUB_ENV"
+          echo "Releasing $VERSION (build ${{ github.run_number }})"
+
+      - name: Check signing key is configured
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+            echo "::error::Add the SPARKLE_PRIVATE_KEY repository secret (see docs/RELEASING.md)"
+            exit 1
+          fi
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Build release app
+        run: |
+          xcodebuild build \
+            -project Matinee.xcodeproj \
+            -scheme Matinee \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath build \
+            MARKETING_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD" \
+            CODE_SIGN_IDENTITY=- \
+            | tee build.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Check app is configured for updates
+        run: |
+          PLIST=build/Build/Products/Release/Matinee.app/Contents/Info.plist
+          KEY=$(/usr/libexec/PlistBuddy -c "Print :SUPublicEDKey" "$PLIST" 2>/dev/null || true)
+          if [ -z "$KEY" ]; then
+            echo "::error::SPARKLE_PUBLIC_KEY is empty in project.yml, so this build could never update itself"
+            exit 1
+          fi
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST"
+
+      - name: Package
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/Build/Products/Release/Matinee.app "Matinee-$VERSION.zip"
+
+      - name: Download Sparkle tools
+        run: |
+          curl -fsSL -o sparkle.tar.xz \
+            "https://github.com/sparkle-project/Sparkle/releases/download/$SPARKLE_VERSION/Sparkle-$SPARKLE_VERSION.tar.xz"
+          mkdir sparkle-tools
+          tar -xJf sparkle.tar.xz -C sparkle-tools
+
+      - name: Sign update and write appcast
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          SIGNATURE=$(printf '%s' "$SPARKLE_PRIVATE_KEY" \
+            | sparkle-tools/bin/sign_update --ed-key-file - "Matinee-$VERSION.zip")
+          DOWNLOAD_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/Matinee-$VERSION.zip"
+          cat > appcast.xml <<APPCAST
+          <?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+            <channel>
+              <title>Matinee</title>
+              <item>
+                <title>Matinee $VERSION</title>
+                <pubDate>$(date -R)</pubDate>
+                <sparkle:version>$BUILD</sparkle:version>
+                <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+                <sparkle:minimumSystemVersion>27.0</sparkle:minimumSystemVersion>
+                <link>https://github.com/$GITHUB_REPOSITORY/releases/tag/$GITHUB_REF_NAME</link>
+                <enclosure url="$DOWNLOAD_URL" type="application/octet-stream" $SIGNATURE />
+              </item>
+            </channel>
+          </rss>
+          APPCAST
+          cat appcast.xml
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "Matinee-$VERSION.zip" appcast.xml \
+            --title "Matinee $VERSION" \
+            --generate-notes

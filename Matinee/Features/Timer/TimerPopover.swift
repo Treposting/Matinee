@@ -5,9 +5,11 @@ import SwiftUI
 /// the glass button styles so nothing here fakes translucency.
 struct TimerPopover: View {
     @Environment(FocusTimer.self) private var timer
+    @Environment(UpdateController.self) private var updates
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            UpdateBanner()
             header
             countdown
             TimerControls()
@@ -46,6 +48,11 @@ struct TimerPopover: View {
 
     private var footer: some View {
         HStack {
+            if updates.isEnabled && !updates.hasUpdate {
+                Button("Check for Updates…") {
+                    updates.checkForUpdates()
+                }
+            }
             Spacer()
             Button("Quit Matinee") {
                 NSApplication.shared.terminate(nil)
