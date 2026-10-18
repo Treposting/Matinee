@@ -1,15 +1,20 @@
 import AppKit
+import Observation
 import SwiftUI
 
 /// Covers every screen with the reminder until the user dismisses it or starts the next phase.
 @MainActor
+@Observable
 final class ReminderOverlay {
-    private var panels: [NSPanel] = []
+    @ObservationIgnored private var panels: [NSPanel] = []
 
     var isShowing: Bool { !panels.isEmpty }
 
     func show(_ reminder: Reminder, onAction: @escaping @MainActor () -> Void) {
         dismiss()
+
+        // Activate first so the panel made key below actually receives Esc and Return.
+        NSApp.activate()
 
         for screen in NSScreen.screens {
             let view = ReminderOverlayView(
@@ -22,13 +27,11 @@ final class ReminderOverlay {
             )
             let panel = makePanel(covering: screen, content: view)
             panel.orderFrontRegardless()
-            if screen == NSScreen.main {
-                panel.makeKey()
-            }
             panels.append(panel)
         }
 
-        NSApp.activate()
+        let keyPanel = panels.first { $0.screen == NSScreen.main } ?? panels.first
+        keyPanel?.makeKeyAndOrderFront(nil)
     }
 
     func dismiss() {
@@ -45,6 +48,8 @@ final class ReminderOverlay {
         )
         panel.level = .screenSaver
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        // Panels hide when the app deactivates by default; the reminder must stay until dismissed.
+        panel.hidesOnDeactivate = false
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = false

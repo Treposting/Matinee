@@ -6,6 +6,7 @@ struct MatineeApp: App {
     @State private var updates = UpdateController()
     @State private var caffeine: CaffeineMode
     @State private var reminders: ReminderSettings
+    @State private var overlay: ReminderOverlay
 
     init() {
         let timer = FocusTimer()
@@ -22,6 +23,7 @@ struct MatineeApp: App {
         _timer = State(initialValue: timer)
         _caffeine = State(initialValue: caffeine)
         _reminders = State(initialValue: reminders)
+        _overlay = State(initialValue: overlay)
     }
 
     var body: some Scene {
@@ -31,6 +33,7 @@ struct MatineeApp: App {
                 .environment(updates)
                 .environment(caffeine)
                 .environment(reminders)
+                .environment(overlay)
         } label: {
             MenuBarLabel(timer: timer, updates: updates)
         }

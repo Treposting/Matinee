@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ReminderSettingsView: View {
     @Environment(ReminderSettings.self) private var reminders
+    @Environment(ReminderOverlay.self) private var overlay
 
     var body: some View {
         @Bindable var reminders = reminders
@@ -13,12 +14,20 @@ struct ReminderSettingsView: View {
             .toggleStyle(.switch)
 
             if reminders.isEnabled {
-                Picker("Reminder", selection: $reminders.choice) {
-                    ForEach(ReminderChoice.allCases) { choice in
-                        Text(choice.menuTitle).tag(choice)
+                HStack {
+                    Picker("Reminder", selection: $reminders.choice) {
+                        ForEach(ReminderChoice.allCases) { choice in
+                            Text(choice.menuTitle).tag(choice)
+                        }
                     }
+                    .pickerStyle(.menu)
+
+                    Button("Preview") {
+                        guard let reminder = reminders.reminder(after: .focus) else { return }
+                        overlay.show(reminder) {}
+                    }
+                    .help("Show the reminder now, the way it appears when focus time is up")
                 }
-                .pickerStyle(.menu)
 
                 if reminders.choice == .custom {
                     TextField("Reminder text", text: $reminders.customText, prompt: Text("Take a walk"))

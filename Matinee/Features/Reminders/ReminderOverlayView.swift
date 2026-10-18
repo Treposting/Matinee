@@ -39,11 +39,13 @@ struct ReminderOverlayView: View {
         .frame(maxWidth: 720)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background {
+            // The dim keeps the reminder readable over any wallpaper; the glass blurs it.
             Rectangle()
-                .fill(.clear)
+                .fill(.black.opacity(0.35))
                 .glassEffect(.regular, in: Rectangle())
                 .ignoresSafeArea()
         }
+        .environment(\.colorScheme, .dark)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
     }
