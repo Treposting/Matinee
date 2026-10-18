@@ -79,6 +79,20 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent \
             build/Build/Products/Release/Matinee.app "Matinee-$VERSION.zip"
 
+      # The DMG is for people installing by hand; Sparkle updates use the zip above.
+      - name: Make disk image
+        run: |
+          mkdir dmg
+          ditto build/Build/Products/Release/Matinee.app dmg/Matinee.app
+          ln -s /Applications dmg/Applications
+          # hdiutil sometimes fails with "Resource busy" on CI runners, so retry.
+          for attempt in 1 2 3; do
+            hdiutil create -volname Matinee -srcfolder dmg -fs HFS+ -format UDZO -ov \
+              "Matinee-$VERSION.dmg" && break
+            [ "$attempt" = 3 ] && exit 1
+            sleep 5
+          done
+
       - name: Download Sparkle tools
         run: |
           curl -fsSL -o sparkle.tar.xz \
@@ -117,6 +131,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            "Matinee-$VERSION.zip" appcast.xml \
+            "Matinee-$VERSION.dmg" "Matinee-$VERSION.zip" appcast.xml \
             --title "Matinee $VERSION" \
             --generate-notes
