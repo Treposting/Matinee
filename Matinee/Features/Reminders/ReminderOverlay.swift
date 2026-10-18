@@ -7,11 +7,13 @@ import SwiftUI
 @Observable
 final class ReminderOverlay {
     @ObservationIgnored private var panels: [NSPanel] = []
+    @ObservationIgnored private var autoDismissTask: Task<Void, Never>?
 
     var isShowing: Bool { !panels.isEmpty }
 
-    func show(_ reminder: Reminder, onAction: @escaping @MainActor () -> Void) {
+    func show(_ reminder: Reminder, onAction: @escaping @MainActor () -> Void = {}) {
         dismiss()
+        let endsAt = reminder.duration.map { Date.now.addingTimeInterval($0) }
 
         // Activate first so the panel made key below actually receives Esc and Return.
         NSApp.activate()
@@ -19,6 +21,7 @@ final class ReminderOverlay {
         for screen in NSScreen.screens {
             let view = ReminderOverlayView(
                 reminder: reminder,
+                endsAt: endsAt,
                 onAction: { [weak self] in
                     self?.dismiss()
                     onAction()
@@ -32,9 +35,19 @@ final class ReminderOverlay {
 
         let keyPanel = panels.first { $0.screen == NSScreen.main } ?? panels.first
         keyPanel?.makeKeyAndOrderFront(nil)
+
+        if let duration = reminder.duration {
+            autoDismissTask = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(duration))
+                guard !Task.isCancelled else { return }
+                self?.dismiss()
+            }
+        }
     }
 
     func dismiss() {
+        autoDismissTask?.cancel()
+        autoDismissTask = nil
         panels.forEach { $0.orderOut(nil) }
         panels.removeAll()
     }
