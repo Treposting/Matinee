@@ -16,7 +16,7 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     MACOSX_DEPLOYMENT_TARGET: "27.0"
-    MARKETING_VERSION: "0.1.3"
+    MARKETING_VERSION: "0.1.4"
     CURRENT_PROJECT_VERSION: "1"
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "-"
@@ -39,6 +39,7 @@ targets:
       base:
         PRODUCT_NAME: Matinee
         PRODUCT_BUNDLE_IDENTIFIER: com.nahid.matinee
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_FILE: Matinee/Info.plist
         # Sparkle: the updater stays off until SPARKLE_PUBLIC_KEY is set (see docs/RELEASING.md).
