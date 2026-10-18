@@ -43,7 +43,7 @@ targets:
         INFOPLIST_FILE: Matinee/Info.plist
         # Sparkle: the updater stays off until SPARKLE_PUBLIC_KEY is set (see docs/RELEASING.md).
         SPARKLE_FEED_URL: https://github.com/Treposting/Matinee/releases/latest/download/appcast.xml
-        SPARKLE_PUBLIC_KEY: ""
+        SPARKLE_PUBLIC_KEY: "nVK1+sFh1I+45S2zZ/qGT8SYYardII8GyR9tqPMggr8="
         INFOPLIST_KEY_CFBundleDisplayName: Matinee
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
         INFOPLIST_KEY_LSUIElement: YES
