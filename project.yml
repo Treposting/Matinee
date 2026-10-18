@@ -1,0 +1,58 @@
+name: Matinee
+
+options:
+  bundleIdPrefix: com.nahid
+  deploymentTarget:
+    macOS: "27.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: "27.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+    ENABLE_HARDENED_RUNTIME: YES
+
+targets:
+  Matinee:
+    type: application
+    platform: macOS
+    sources:
+      - path: Matinee
+        excludes:
+          - "**/.gitkeep"
+    settings:
+      base:
+        PRODUCT_NAME: Matinee
+        PRODUCT_BUNDLE_IDENTIFIER: com.nahid.matinee
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Matinee
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_NSHumanReadableCopyright: ""
+
+  MatineeTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: MatineeTests
+    dependencies:
+      - target: Matinee
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nahid.matinee.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Matinee:
+    build:
+      targets:
+        Matinee: all
+        MatineeTests: [test]
+    test:
+      targets:
+        - MatineeTests
