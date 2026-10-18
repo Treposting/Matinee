@@ -53,7 +53,8 @@ git push origin v0.1.0
 ```
 
 The **Release** workflow builds the app with that version, zips it, signs the zip with
-the private key, writes `appcast.xml`, and publishes both on a GitHub release. The build
+the private key, writes `appcast.xml`, and publishes them on a GitHub release together
+with a `.dmg` for installing by hand. The build
 number is the workflow run number, so it always grows; Sparkle uses it to decide what's
 newer.
 
@@ -62,8 +63,9 @@ newer.
 Releases are signed ad-hoc and not notarized yet, so macOS blocks the first launch of a
 downloaded copy:
 
-1. Unzip and move **Matinee.app** to **/Applications** first. Sparkle can't update an
-   app that runs straight from Downloads.
+1. Open `Matinee-<version>.dmg` from the release and drag **Matinee** onto
+   **Applications** (or unzip the `.zip` and move it there). Sparkle can't update an app
+   that runs straight from Downloads or from the disk image.
 2. Open it. When macOS says it can't verify the app, go to System Settings → Privacy &
    Security and click **Open Anyway**.
    (Terminal alternative: `xattr -dr com.apple.quarantine /Applications/Matinee.app`.)
