@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select newest Xcode
+        run: |
+          ls -d /Applications/Xcode*.app || true
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE/Contents/Developer"
+          xcodebuild -version
+          MAJOR=$(xcodebuild -version | head -1 | awk '{print $2}' | cut -d. -f1)
+          if [ "$MAJOR" -lt 27 ]; then
+            echo "::error::Xcode 27+ (macOS 27 SDK) is required, runner has Xcode $MAJOR"
+            exit 1
+          fi
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project Matinee.xcodeproj \
+            -scheme Matinee \
+            -destination 'platform=macOS' \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY=- \
+            | tee build.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Test
+        run: |
+          xcodebuild test \
+            -project Matinee.xcodeproj \
+            -scheme Matinee \
+            -destination 'platform=macOS' \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY=-
