@@ -5,8 +5,10 @@ struct Reminder: Equatable, Sendable {
     let title: String
     let detail: String
     let systemImage: String
-    /// Label of the button that starts the next phase.
-    let actionTitle: String
+    /// Label of the button that starts the next phase, or nil when there is nothing to start.
+    var actionTitle: String? = nil
+    /// When set, the overlay counts down and closes itself after this long.
+    var duration: TimeInterval? = nil
 }
 
 enum ReminderChoice: String, CaseIterable, Identifiable, Sendable {
